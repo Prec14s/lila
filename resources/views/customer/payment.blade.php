@@ -1,0 +1,110 @@
+@extends('layouts.app')
+
+@section('content')
+<div x-data="{ method: '{{ old('payment_method', $paymentSettings->first()->type ?? '') }}', preview: null,
+    isCash() { return this.method === 'cash'; },
+    setPreview(e) { const f = e.target.files[0]; if (f) this.preview = URL.createObjectURL(f); } }"
+     class="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+
+    <div class="text-center mb-6">
+        <span class="text-4xl">💳</span>
+        <h1 class="text-xl font-extrabold text-coffee-800 mt-2">Selesaikan Pembayaran</h1>
+        <p class="text-coffee-500 text-sm">No. Order: <span class="font-semibold">{{ $order->order_number }}</span></p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-coffee-100 p-5 mb-5 card-hover">
+        <p class="text-coffee-500 text-xs uppercase tracking-wide mb-2">Ringkasan Pesanan</p>
+        <div class="space-y-1.5">
+            @foreach($order->items as $item)
+                <div class="flex justify-between text-sm">
+                    <span class="text-coffee-700">{{ $item->menu_name }} <span class="text-coffee-400">x{{ $item->qty }}</span></span>
+                    <span class="font-medium text-coffee-800">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</span>
+                </div>
+            @endforeach
+        </div>
+        <div class="border-t border-dashed border-coffee-200 mt-3 pt-3 flex justify-between items-center">
+            <span class="font-semibold text-coffee-700">Total Bayar</span>
+            <span class="font-extrabold text-lg text-coffee-800">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
+        </div>
+    </div>
+
+    <form action="{{ route('order.upload-proof', $order->order_number) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+        @csrf
+
+        {{-- ============ PILIH CARA BAYAR: TUNAI / NON-TUNAI ============ --}}
+        <div>
+            <p class="text-sm font-semibold text-coffee-700 mb-2">Pilih Cara Bayar</p>
+            <div class="grid grid-cols-2 xs:grid-cols-{{ min(3, max(2, $paymentSettings->count())) }} gap-2.5">
+                @foreach($paymentSettings as $ps)
+                    <label :class="method === '{{ $ps->type }}' ? 'border-coffee-700 bg-coffee-50 shadow scale-[1.02]' : 'border-coffee-200'"
+                           class="cursor-pointer border-2 rounded-xl p-2.5 sm:p-3 text-center transition-all duration-200 btn-press flex flex-col items-center justify-center">
+                        <input type="radio" name="payment_method" value="{{ $ps->type }}" x-model="method" class="hidden">
+                        <span class="text-2xl block mb-1">{{ $ps->icon() }}</span>
+                        <span class="text-[11px] font-semibold text-coffee-700 leading-tight block">{{ $ps->displayLabel() }}</span>
+                    </label>
+                @endforeach
+            </div>
+            <div class="flex justify-center gap-2 mt-3 text-[11px] flex-wrap">
+                <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold">📲 Non-Tunai = QRIS / Transfer</span>
+                <span class="px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 font-semibold">💵 Tunai = Bayar di Kasir</span>
+            </div>
+        </div>
+
+        {{-- ============ DETAIL NON-TUNAI (QRIS / TRANSFER) ============ --}}
+        @foreach($paymentSettings as $ps)
+            @if(! $ps->isCash())
+                <div x-show="method === '{{ $ps->type }}'" x-transition class="bg-coffee-50 rounded-2xl p-4 text-center">
+                    @if($ps->type === 'qris')
+                        @if($ps->qris_image)
+                            <img src="{{ asset('storage/'.$ps->qris_image) }}" alt="QRIS" class="w-48 h-48 object-contain mx-auto rounded-xl bg-white p-2 shadow">
+                        @else
+                            <div class="w-48 h-48 mx-auto rounded-xl bg-white flex items-center justify-center text-coffee-300 text-sm shadow">QRIS belum diunggah</div>
+                        @endif
+                        <p class="text-xs text-coffee-500 mt-2">Scan QRIS di atas menggunakan aplikasi e-wallet / m-banking kamu.</p>
+                    @else
+                        <p class="text-coffee-500 text-xs uppercase tracking-wide">Transfer ke Rekening</p>
+                        <p class="text-lg font-extrabold text-coffee-800 mt-1">{{ $ps->bank_name }}</p>
+                        <p class="text-2xl font-mono font-bold text-coffee-700 tracking-wider mt-1">{{ $ps->account_number }}</p>
+                        <p class="text-sm text-coffee-500 mt-1">a.n. {{ $ps->account_holder }}</p>
+                    @endif
+                </div>
+            @endif
+        @endforeach
+
+        {{-- ============ DETAIL TUNAI ============ --}}
+        @php $cashSetting = $paymentSettings->firstWhere('type', 'cash'); @endphp
+        @if($cashSetting)
+            <div x-show="method === 'cash'" x-transition class="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-center">
+                <span class="text-3xl block mb-1">💵</span>
+                <p class="font-bold text-orange-700">Bayar Tunai di Kasir</p>
+                <p class="text-orange-600 text-sm mt-1">{{ $cashSetting->instruction ?: 'Silakan bayar langsung ke kasir saat mengambil pesanan.' }}</p>
+                <p class="text-orange-500 text-xs mt-2">Owner akan mengonfirmasi pembayaranmu setelah kamu bayar di kasir.</p>
+            </div>
+        @endif
+
+        {{-- ============ UPLOAD BUKTI (HANYA NON-TUNAI) ============ --}}
+        <div x-show="!isCash()" x-transition>
+            <label class="text-sm font-semibold text-coffee-700 mb-2 block">Unggah Bukti Pembayaran</label>
+            <label class="block border-2 border-dashed border-coffee-300 rounded-2xl p-4 text-center cursor-pointer hover:border-coffee-500 transition">
+                <template x-if="preview">
+                    <img :src="preview" class="w-full h-40 object-contain rounded-xl mb-2">
+                </template>
+                <template x-if="!preview">
+                    <div class="py-6">
+                        <span class="text-3xl block mb-1">📤</span>
+                        <span class="text-sm text-coffee-500">Ketuk untuk pilih foto/screenshot</span>
+                    </div>
+                </template>
+                <input type="file" name="payment_proof" accept="image/*" :required="!isCash()" class="hidden" @change="setPreview($event)">
+            </label>
+        </div>
+
+        <button type="submit"
+                class="btn-press w-full text-white font-bold py-3.5 rounded-xl transition shadow-lg"
+                :class="isCash() ? 'bg-orange-600 hover:bg-orange-700' : 'bg-coffee-800 hover:bg-coffee-900'">
+            <span x-show="!isCash()">Konfirmasi Pembayaran ✅</span>
+            <span x-show="isCash()">Konfirmasi Pesanan (Bayar di Kasir) 💵</span>
+        </button>
+    </form>
+</div>
+@endsection
