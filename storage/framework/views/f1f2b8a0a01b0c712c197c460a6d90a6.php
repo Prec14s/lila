@@ -28,9 +28,33 @@
 
     <?php if($order): ?>
         <div class="bg-white rounded-2xl shadow-sm border border-coffee-100 p-5 card-hover animate-popin">
-            <div class="flex justify-between items-center mb-3">
+            <div class="flex justify-between items-center mb-3" x-data="{
+                copied: false,
+                copyText(text) {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(text);
+                    } else {
+                        const input = document.createElement('textarea');
+                        input.value = text;
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                    }
+                    this.copied = true;
+                    setTimeout(() => this.copied = false, 2000);
+                }
+            }">
                 <span class="text-coffee-500 text-xs uppercase">No. Order</span>
-                <span class="font-bold text-coffee-800"><?php echo e($order->order_number); ?></span>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-coffee-800 font-mono select-all bg-coffee-50 px-2 py-0.5 rounded border border-coffee-200/60"><?php echo e($order->order_number); ?></span>
+                    <button @click="copyText('<?php echo e(trim($order->order_number)); ?>')"
+                            type="button"
+                            class="btn-press text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all">
+                        <span x-show="!copied" class="text-coffee-700 bg-coffee-100 px-2.5 py-1 rounded-lg hover:bg-coffee-200">📋 Salin</span>
+                        <span x-show="copied" x-cloak class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg shadow-xs">✅ Tersalin!</span>
+                    </button>
+                </div>
             </div>
 
             <div class="flex gap-2 mb-4 flex-wrap">
