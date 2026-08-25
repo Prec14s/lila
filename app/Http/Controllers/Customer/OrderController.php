@@ -89,6 +89,10 @@ class OrderController extends Controller
             return $order;
         });
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['redirect' => route('order.pay', $order->order_number)]);
+        }
+
         return redirect()->route('order.pay', $order->order_number);
     }
 
@@ -160,6 +164,10 @@ class OrderController extends Controller
             null,
             $order->customer_name
         );
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['redirect' => route('order.success', $order->order_number)]);
+        }
 
         return redirect()->route('order.success', $order->order_number);
     }

@@ -349,14 +349,38 @@ function orderApp() {
             this.submitCheckout();
         },
 
-        submitCheckout() {
+        async submitCheckout() {
             this.submitting = true;
             this.$refs.fCustomerName.value = this.customerName;
             this.$refs.fCustomerPhone.value = this.customerPhone;
             this.$refs.fTableNumber.value = this.tableNumber;
             this.$refs.fNote.value = this.note;
             this.$refs.fCart.value = JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty })));
-            document.getElementById('checkoutForm').submit();
+
+            const form = document.getElementById('checkoutForm');
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                        return;
+                    }
+                }
+                form.submit();
+            } catch (err) {
+                form.submit();
+            }
         },
     }
 }

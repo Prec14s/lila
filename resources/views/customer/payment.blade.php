@@ -1,10 +1,51 @@
 @extends('layouts.app')
 
 @section('content')
-<div x-data="{ method: '{{ old('payment_method', $paymentSettings->first()->type ?? '') }}', preview: null,
+<div x-data="{
+    method: '{{ old('payment_method', $paymentSettings->first()->type ?? '') }}',
+    preview: null,
+    submitting: false,
+    errorMessage: '',
     isCash() { return this.method === 'cash'; },
-    setPreview(e) { const f = e.target.files[0]; if (f) this.preview = URL.createObjectURL(f); } }"
-     class="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+    setPreview(e) { const f = e.target.files[0]; if (f) this.preview = URL.createObjectURL(f); },
+    async submitPayment(e) {
+        e.preventDefault();
+        if (this.submitting) return;
+        this.submitting = true;
+        this.errorMessage = '';
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const res = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                    return;
+                }
+            } else if (res.status === 422) {
+                const data = await res.json();
+                const firstErr = Object.values(data.errors || {})[0];
+                this.errorMessage = Array.isArray(firstErr) ? firstErr[0] : (firstErr || 'Gagal memproses pembayaran.');
+                this.submitting = false;
+                return;
+            }
+            form.submit();
+        } catch (err) {
+            form.submit();
+        }
+    }
+}" class="max-w-2xl mx-auto px-4 py-8 sm:py-12">
 
     <div class="text-center mb-6">
         <span class="text-4xl">💳</span>
@@ -28,13 +69,17 @@
         </div>
     </div>
 
+    <div x-show="errorMessage" x-cloak class="mb-5 rounded-2xl bg-red-50 border border-red-200 text-red-800 p-4 text-xs font-semibold shadow-xs">
+        ⚠️ <span x-text="errorMessage"></span>
+    </div>
+
     @if($errors->any())
         <div class="mb-5 rounded-2xl bg-red-50 border border-red-200 text-red-800 p-4 text-xs font-semibold shadow-xs">
             ⚠️ {{ $errors->first() }}
         </div>
     @endif
 
-    <form action="{{ route('order.upload-proof', $order->order_number) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+    <form action="{{ route('order.upload-proof', $order->order_number) }}" method="POST" enctype="multipart/form-data" @submit="submitPayment($event)" class="space-y-5">
         @csrf
 
         {{-- ============ PILIH CARA BAYAR: TUNAI / NON-TUNAI ============ --}}
@@ -106,10 +151,12 @@
         </div>
 
         <button type="submit"
-                class="btn-press w-full text-white font-bold py-3.5 rounded-xl transition shadow-lg"
+                :disabled="submitting"
+                class="btn-press w-full text-white font-bold py-3.5 rounded-xl transition shadow-lg disabled:opacity-50"
                 :class="isCash() ? 'bg-orange-600 hover:bg-orange-700' : 'bg-coffee-800 hover:bg-coffee-900'">
-            <span x-show="!isCash()">Konfirmasi Pembayaran ✅</span>
-            <span x-show="isCash()">Konfirmasi Pesanan (Bayar di Kasir) 💵</span>
+            <span x-show="!submitting && !isCash()">Konfirmasi Pembayaran ✅</span>
+            <span x-show="!submitting && isCash()">Konfirmasi Pesanan (Bayar di Kasir) 💵</span>
+            <span x-show="submitting">Memproses... ⏳</span>
         </button>
     </form>
 </div>
