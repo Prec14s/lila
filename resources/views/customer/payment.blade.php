@@ -23,7 +23,7 @@
         }
 
         try {
-            const res = await fetch('{{ route('order.upload-proof', $order->order_number, false) }}', {
+            const res = await fetch('{{ route('order.upload-proof', $order->order_number) }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -32,23 +32,24 @@
                 }
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.redirect) {
-                    window.location.replace(data.redirect);
-                    return;
-                }
-            } else if (res.status === 422) {
-                const data = await res.json();
-                const firstErr = Object.values(data.errors || {})[0];
-                this.errorMessage = Array.isArray(firstErr) ? firstErr[0] : (firstErr || 'Gagal memproses pembayaran.');
-                this.submitting = false;
+            const contentType = res.headers.get('content-type') || '';
+            const data = contentType.includes('application/json') ? await res.json() : null;
+
+            if (res.ok && data && data.redirect) {
+                window.location.href = data.redirect;
                 return;
             }
-            this.errorMessage = 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.';
+
+            if (data && data.errors) {
+                const firstErr = Object.values(data.errors)[0];
+                this.errorMessage = Array.isArray(firstErr) ? firstErr[0] : (firstErr || 'Gagal memproses pembayaran.');
+            } else {
+                this.errorMessage = 'Terjadi kesalahan saat memproses pembayaran (Status ' + res.status + '). Silakan coba lagi.';
+            }
             this.submitting = false;
         } catch (err) {
-            this.errorMessage = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+            console.error('Payment error:', err);
+            this.errorMessage = 'Terjadi kesalahan koneksi. Silakan coba lagi.';
             this.submitting = false;
         }
     }

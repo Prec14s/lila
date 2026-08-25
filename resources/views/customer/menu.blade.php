@@ -350,7 +350,7 @@ function orderApp() {
                     cart: JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty })))
                 };
 
-                const res = await fetch('{{ route('order.store', [], false) }}', {
+                const res = await fetch('{{ route('order.store') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -361,18 +361,24 @@ function orderApp() {
                     body: JSON.stringify(payload)
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.redirect) {
-                        window.location.replace(data.redirect);
-                        return;
-                    }
+                const contentType = res.headers.get('content-type') || '';
+                const data = contentType.includes('application/json') ? await res.json() : null;
+
+                if (res.ok && data && data.redirect) {
+                    window.location.href = data.redirect;
+                    return;
                 }
-                const errData = await res.json();
-                alert(Object.values(errData.errors || {})[0]?.[0] || 'Gagal memproses pesanan.');
+
+                if (data && data.errors) {
+                    const firstErr = Object.values(data.errors)[0];
+                    alert(Array.isArray(firstErr) ? firstErr[0] : firstErr);
+                } else {
+                    alert('Gagal membuat pesanan (Status ' + res.status + '). Silakan coba lagi.');
+                }
                 this.submitting = false;
             } catch (err) {
-                alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
+                console.error('Checkout error:', err);
+                alert('Terjadi kesalahan koneksi. Silakan coba lagi.');
                 this.submitting = false;
             }
         },
