@@ -117,7 +117,12 @@ class OrderController extends Controller
 
         $path = $order->payment_proof;
         if (! $isCash && $request->hasFile('payment_proof')) {
-            $path = $request->file('payment_proof')->store('proofs', 'public');
+            $file = $request->file('payment_proof');
+            if ($file && $file->isValid() && $file->getRealPath()) {
+                $path = $file->store('proofs', 'public');
+            } else {
+                return back()->withErrors(['payment_proof' => 'File bukti pembayaran tidak valid atau gagal diunggah. Silakan pilih ulang foto bukti pembayaran.'])->withInput();
+            }
         }
 
         $order->update([

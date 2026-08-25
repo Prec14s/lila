@@ -28,6 +28,12 @@
         </div>
     </div>
 
+    @if($errors->any())
+        <div class="mb-5 rounded-2xl bg-red-50 border border-red-200 text-red-800 p-4 text-xs font-semibold shadow-xs">
+            ⚠️ {{ $errors->first() }}
+        </div>
+    @endif
+
     <form action="{{ route('order.upload-proof', $order->order_number) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
         @csrf
 
@@ -95,7 +101,7 @@
                         <span class="text-sm text-coffee-500">Ketuk untuk pilih foto/screenshot</span>
                     </div>
                 </template>
-                <input type="file" name="payment_proof" accept="image/*" :required="!isCash()" class="hidden" @change="setPreview($event)">
+                <input type="file" name="payment_proof" accept="image/*" class="hidden" @change="setPreview($event)">
             </label>
         </div>
 
