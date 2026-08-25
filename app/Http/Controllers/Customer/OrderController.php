@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -124,7 +125,16 @@ class OrderController extends Controller
             if ($request->hasFile('payment_proof')) {
                 $file = $request->file('payment_proof');
                 if ($file && $file->isValid()) {
-                    $path = $file->store('proofs', 'public');
+                    $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                    $filename = Str::random(40) . '.' . $ext;
+                    $tempPath = $file->getPathname();
+
+                    if ($tempPath && file_exists($tempPath)) {
+                        Storage::disk('public')->put('proofs/' . $filename, file_get_contents($tempPath));
+                        $path = 'proofs/' . $filename;
+                    } else {
+                        return back()->withErrors(['payment_proof' => 'Gagal membaca file gambar sementara. Silakan coba pilih ulang foto.'])->withInput();
+                    }
                 } else {
                     $errCode = $file ? $file->getError() : 0;
                     $msg = ($errCode === 1 || $errCode === 2)
