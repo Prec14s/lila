@@ -110,18 +110,30 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'payment_method' => ['required', 'in:qris,bank_transfer,cash'],
-            'payment_proof' => ['required_unless:payment_method,cash', 'nullable', 'image', 'max:4096'],
+            'payment_proof' => ['required_unless:payment_method,cash', 'nullable', 'image', 'max:10240'],
+        ], [
+            'payment_proof.required_unless' => 'Foto bukti pembayaran wajib diunggah untuk metode Non-Tunai.',
+            'payment_proof.image' => 'File bukti pembayaran harus berupa gambar (JPG, PNG, WEBP).',
+            'payment_proof.max' => 'Ukuran foto bukti pembayaran maksimal 10MB.',
         ]);
 
         $isCash = $validated['payment_method'] === 'cash';
 
         $path = $order->payment_proof;
-        if (! $isCash && $request->hasFile('payment_proof')) {
-            $file = $request->file('payment_proof');
-            if ($file && $file->isValid() && $file->getRealPath()) {
-                $path = $file->store('proofs', 'public');
-            } else {
-                return back()->withErrors(['payment_proof' => 'File bukti pembayaran tidak valid atau gagal diunggah. Silakan pilih ulang foto bukti pembayaran.'])->withInput();
+        if (! $isCash) {
+            if ($request->hasFile('payment_proof')) {
+                $file = $request->file('payment_proof');
+                if ($file && $file->isValid()) {
+                    $path = $file->store('proofs', 'public');
+                } else {
+                    $errCode = $file ? $file->getError() : 0;
+                    $msg = ($errCode === 1 || $errCode === 2)
+                        ? 'Ukuran foto terlalu besar (melebihi batas upload PHP). Silakan gunakan screenshot / foto yang lebih kecil.'
+                        : 'File bukti pembayaran tidak valid atau gagal diunggah. Silakan pilih ulang foto.';
+                    return back()->withErrors(['payment_proof' => $msg])->withInput();
+                }
+            } elseif (! $path) {
+                return back()->withErrors(['payment_proof' => 'Foto bukti pembayaran wajib diunggah untuk metode Non-Tunai.'])->withInput();
             }
         }
 
