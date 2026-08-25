@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-xl mx-auto px-4 py-10 sm:py-14 text-center">
+<div class="max-w-xl mx-auto px-4 py-8 sm:py-12 text-center">
+
+    <div class="flex justify-start mb-2">
+        <a href="{{ route('menu.index') }}" class="btn-press inline-flex items-center gap-1.5 bg-white border border-coffee-200 text-coffee-700 hover:bg-coffee-50 font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition">
+            ← Pesan Menu Lainnya
+        </a>
+    </div>
 
     <div class="w-24 h-24 mx-auto rounded-full bg-emerald-100 flex items-center justify-center animate-popin">
         <span class="text-5xl">🎉</span>
@@ -9,6 +15,10 @@
 
     <h1 class="text-xl font-extrabold text-coffee-800 mt-5">Pesanan Berhasil Dikirim!</h1>
     <p class="text-coffee-500 text-sm mt-1">Langkah terakhir, kirim konfirmasi pesananmu ke WhatsApp Owner ya 👇</p>
+    <div class="mt-4 rounded-2xl bg-amber-50 border border-amber-200/90 p-4 sm:p-5 text-center text-amber-950 text-sm sm:text-base md:text-lg font-extrabold shadow-sm flex items-center justify-center gap-2.5">
+        <span class="text-xl sm:text-2xl shrink-0">⚠️</span>
+        <span class="leading-snug">Harap salin nomor order Anda untuk cek status pesanan Anda. Terima kasih! 👇</span>
+    </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-coffee-100 p-5 mt-6 text-left card-hover">
         <div class="flex justify-between items-center mb-3" x-data="{
@@ -100,6 +110,5 @@
         </div>
     @endif
 
-    <a href="{{ route('menu.index') }}" class="block mt-4 text-coffee-400 text-sm underline">Pesan menu lainnya</a>
 </div>
 @endsection

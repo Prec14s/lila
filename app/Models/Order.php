@@ -16,6 +16,7 @@ class Order extends Model
         'order_number', 'customer_name', 'customer_phone', 'table_number', 'total',
         'payment_method', 'payment_category', 'payment_proof', 'payment_status', 'rejection_reason', 'order_status',
         'note', 'verified_by', 'verified_at', 'forwarded_to_kitchen_at',
+        'kitchen_processing_started_at', 'kitchen_completed_at',
     ];
 
     protected function casts(): array
@@ -24,6 +25,8 @@ class Order extends Model
             'total' => 'integer',
             'verified_at' => 'datetime',
             'forwarded_to_kitchen_at' => 'datetime',
+            'kitchen_processing_started_at' => 'datetime',
+            'kitchen_completed_at' => 'datetime',
         ];
     }
 
@@ -122,5 +125,34 @@ class Order extends Model
             'cash' => 'Tunai di Kasir',
             default => '-',
         };
+    }
+
+    public function kitchenDurationInSeconds(): ?int
+    {
+        if (!$this->kitchen_processing_started_at || !$this->kitchen_completed_at) {
+            return null;
+        }
+
+        return (int) $this->kitchen_processing_started_at->diffInSeconds($this->kitchen_completed_at);
+    }
+
+    public function kitchenDurationFormatted(): string
+    {
+        $seconds = $this->kitchenDurationInSeconds();
+        if ($seconds === null) {
+            return '-';
+        }
+
+        if ($seconds < 60) {
+            return "{$seconds} dtk";
+        }
+
+        $minutes = floor($seconds / 60);
+        $remSeconds = $seconds % 60;
+        if ($remSeconds == 0) {
+            return "{$minutes} mnt";
+        }
+
+        return "{$minutes}m {$remSeconds}s";
     }
 }

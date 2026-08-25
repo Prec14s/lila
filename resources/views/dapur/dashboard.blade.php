@@ -31,17 +31,57 @@
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    @forelse($orders as $order)
-        <div class="card-pop bg-white rounded-2xl border border-coffee-100 shadow-sm p-4 sm:p-5 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center justify-between mb-2">
-                    <p class="font-bold text-coffee-800">{{ $order->order_number }}</p>
-                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $order->orderStatusColor() }}">{{ $order->orderStatusLabel() }}</span>
+    @forelse($orders as $index => $order)
+        <div class="card-pop bg-white rounded-2xl border {{ $loop->first ? 'border-amber-200 bg-amber-50/20' : 'border-coffee-100' }} shadow-sm p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden">
+            @if($loop->first)
+                <div class="absolute top-0 right-0 bg-amber-100 text-amber-800 border-l border-b border-amber-200 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-xs">
+                    📌 Urutan Pertama
                 </div>
+            @endif
+
+            <div>
+                {{-- NOMOR ANTREAN & NO. ORDER --}}
+                <div class="flex items-center justify-between mb-3 border-b border-coffee-100 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <div class="flex flex-col items-center justify-center min-w-[42px] px-2.5 py-1 rounded-xl font-black shrink-0 {{ $loop->first ? 'bg-amber-700 text-white' : 'bg-coffee-800 text-white' }}">
+                            <span class="text-[9px] uppercase font-bold tracking-tighter opacity-80 leading-none">Antrean</span>
+                            <span class="text-base leading-none mt-0.5">#{{ $loop->iteration }}</span>
+                        </div>
+                        <div>
+                            <p class="font-extrabold text-coffee-800 text-sm leading-tight">{{ $order->order_number }}</p>
+                            <p class="text-[10px] text-coffee-500 font-medium">ACC: {{ $order->verified_at ? $order->verified_at->format('H:i') : $order->created_at->format('H:i') }} WIB</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $order->orderStatusColor() }} shrink-0">
+                        {{ $order->orderStatusLabel() }}
+                    </span>
+                </div>
+
                 <div class="flex items-center justify-between mb-3 bg-coffee-50/70 p-2.5 rounded-xl border border-coffee-100/50">
                     <p class="text-sm text-coffee-700 font-semibold truncate">👤 {{ $order->customer_name }}</p>
                     <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-coffee-800 text-white shadow-sm shrink-0">🪑 {{ $order->table_number ?? '-' }}</span>
                 </div>
+
+                @if($order->order_status === 'processing' && $order->kitchen_processing_started_at)
+                    <div class="mb-3 bg-blue-50 border border-blue-200/80 rounded-xl p-2.5 text-center"
+                         x-data="{
+                             startTime: {{ $order->kitchen_processing_started_at->timestamp * 1000 }},
+                             elapsedStr: '0m 00s',
+                             updateTimer() {
+                                 const now = Date.now();
+                                 const diffSec = Math.max(0, Math.floor((now - this.startTime) / 1000));
+                                 const m = Math.floor(diffSec / 60);
+                                 const s = diffSec % 60;
+                                 this.elapsedStr = `${m}m ${String(s).padStart(2, '0')}s`;
+                             }
+                         }"
+                         x-init="updateTimer(); setInterval(() => updateTimer(), 1000)">
+                        <p class="text-[11px] font-bold text-blue-800 flex items-center justify-center gap-1.5">
+                            <span>⏱️ Waktu Pengerjaan Berjalan:</span>
+                            <span class="font-extrabold text-blue-900 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-xs font-mono" x-text="elapsedStr">0m 00s</span>
+                        </p>
+                    </div>
+                @endif
 
                 <div class="bg-coffee-50 rounded-xl p-3 space-y-1.5 mb-4">
                     @foreach($order->items as $item)
@@ -60,14 +100,14 @@
                 <form action="{{ route('dapur.orders.process', $order) }}" method="POST">
                     @csrf
                     <button class="btn-press w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-extrabold py-3 rounded-xl text-sm sm:text-base transition shadow-md">
-                        🍳 Mulai Proses
+                        🍳 Mulai Proses (Antrean #{{ $loop->iteration }})
                     </button>
                 </form>
             @elseif($order->order_status === 'processing')
                 <form action="{{ route('dapur.orders.complete', $order) }}" method="POST">
                     @csrf
                     <button class="btn-press w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold py-3 rounded-xl text-sm sm:text-base transition shadow-md">
-                        ✅ Tandai Selesai
+                        ✅ Tandai Selesai (Antrean #{{ $loop->iteration }})
                     </button>
                 </form>
             @endif
@@ -76,7 +116,7 @@
         <div class="col-span-full text-center py-16 bg-white rounded-2xl border border-coffee-100">
             <span class="text-4xl">🍽️</span>
             <p class="text-coffee-400 mt-2 text-sm">Belum ada pesanan yang masuk.</p>
-            <p class="text-coffee-400 text-xs mt-1">Pesanan yang disetujui (ACC) oleh Owner akan otomatis muncul di sini.</p>
+            <p class="text-coffee-400 text-xs mt-1">Pesanan yang disetujui (ACC) oleh Owner akan otomatis muncul di sini sesuai urutan waktu ACC.</p>
         </div>
     @endforelse
 </div>

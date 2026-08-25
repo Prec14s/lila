@@ -144,9 +144,12 @@
                            class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-coffee-400 focus:outline-none">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-coffee-600">Nomor WhatsApp</label>
-                    <input x-model="customerPhone" type="tel" placeholder="08xxxxxxxxxx"
-                           class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-coffee-400 focus:outline-none">
+                    <label class="text-xs font-semibold text-coffee-600">Nomor WhatsApp <span class="text-coffee-400 font-normal">(Hanya Angka, Max 12 Digit)</span></label>
+                    <input x-model="customerPhone"
+                           @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 12); customerPhone = $event.target.value"
+                           @keydown="if ($event.key.length === 1 && !/[0-9]/.test($event.key) && !$event.ctrlKey && !$event.metaKey && $event.key !== 'Backspace' && $event.key !== 'Delete' && $event.key !== 'Tab') $event.preventDefault()"
+                           type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" placeholder="Contoh: 081234567890"
+                           class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-coffee-400 focus:outline-none font-semibold">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-coffee-600">Nomor Meja <span class="text-coffee-400 font-normal">(Hanya Angka)</span></label>
@@ -268,6 +271,15 @@ function orderApp() {
             localStorage.removeItem('ws_name');
             localStorage.removeItem('ws_phone');
             localStorage.removeItem('ws_table');
+
+            this.$watch('customerPhone', val => {
+                if (val) {
+                    const cleaned = String(val).replace(/[^0-9]/g, '').slice(0, 12);
+                    if (cleaned !== val) {
+                        this.customerPhone = cleaned;
+                    }
+                }
+            });
         },
 
         matchesSearch(name, catId) {
@@ -313,9 +325,14 @@ function orderApp() {
         },
 
         saveIdentity() {
+            this.customerPhone = this.customerPhone.replace(/[^0-9]/g, '').slice(0, 12);
             this.tableNumber = this.tableNumber.replace(/[^0-9]/g, '');
             if (!this.customerName.trim() || !this.customerPhone.trim() || !this.tableNumber.trim()) {
-                alert('Nama, nomor WhatsApp, dan nomor meja (hanya berupa angka) wajib diisi.');
+                alert('Nama, nomor WhatsApp (hanya angka maksimal 12 digit), dan nomor meja wajib diisi.');
+                return;
+            }
+            if (this.customerPhone.length > 12) {
+                alert('Nomor WhatsApp maksimal 12 digit angka.');
                 return;
             }
             this.identityOpen = false;

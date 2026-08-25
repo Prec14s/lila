@@ -20,10 +20,13 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:100'],
-            'customer_phone' => ['required', 'string', 'max:20'],
+            'customer_phone' => ['required', 'string', 'max:12', 'regex:/^[0-9]+$/'],
             'table_number' => ['required', 'string', 'max:50'],
             'note' => ['nullable', 'string', 'max:255'],
             'cart' => ['required', 'string'],
+        ], [
+            'customer_phone.max' => 'Nomor WhatsApp maksimal 12 digit.',
+            'customer_phone.regex' => 'Nomor WhatsApp hanya boleh berupa angka.',
         ]);
 
         $cart = json_decode($validated['cart'], true);

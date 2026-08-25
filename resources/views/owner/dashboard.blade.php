@@ -3,26 +3,91 @@
 @section('content')
 @php $title = 'Dashboard Owner'; @endphp
 
-{{-- TIME & DATE BANNER WIDGET --}}
-<div class="mb-6 bg-white rounded-2xl border border-coffee-100 p-4 lg:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-    <div>
-        <h2 class="font-bold text-coffee-800 text-lg">Ringkasan Operasional Warkop</h2>
-        <p class="text-xs text-coffee-500 mt-0.5">Waktu Server Real-time (WIB Jakarta)</p>
-    </div>
-    <div class="flex items-center gap-2.5 bg-coffee-50 border border-coffee-200/80 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-coffee-800 shrink-0 shadow-xs">
-        <span>📅 {{ now()->translatedFormat('l, d F Y') }}</span>
-        <span class="text-coffee-300">|</span>
-        <span class="flex items-center gap-1">⏰ <span id="ownerClock">{{ now()->format('H:i') }}</span> WIB</span>
+{{-- BANNER HEADER WIDGET --}}
+<div class="mb-6 bg-white rounded-2xl border border-coffee-100 p-4 lg:p-5 shadow-sm">
+    <h2 class="font-bold text-coffee-800 text-lg">Ringkasan Operasional Warkop</h2>
+</div>
+
+{{-- FILTER PERIODE WIDGET --}}
+<div class="mb-6 bg-white rounded-2xl border border-coffee-100 p-4 lg:p-5 shadow-sm">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+            <h3 class="font-bold text-coffee-800 text-sm md:text-base flex items-center gap-2">
+                <span>🗓️ Filter Periode Laporan</span>
+                @if($day || $month || $year)
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Filter Aktif</span>
+                @endif
+            </h3>
+            <p class="text-xs text-coffee-500 mt-0.5">Filter data berdasarkan tanggal, bulan, dan tahun operasional</p>
+        </div>
+
+        <form action="{{ route('owner.dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2">
+            {{-- Tanggal --}}
+            <div class="w-28">
+                <select name="day" class="w-full text-xs rounded-xl border-coffee-200 bg-coffee-50/50 text-coffee-800 font-semibold focus:ring-coffee-500 focus:border-coffee-500 py-2">
+                    <option value="">Semua Tgl</option>
+                    @for($d = 1; $d <= 31; $d++)
+                        @php $dVal = str_pad($d, 2, '0', STR_PAD_LEFT); @endphp
+                        <option value="{{ $dVal }}" {{ (string)$day === (string)$dVal ? 'selected' : '' }}>Tanggal {{ $dVal }}</option>
+                    @endfor
+                </select>
+            </div>
+
+            {{-- Bulan --}}
+            <div class="w-36">
+                @php
+                    $months = [
+                        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+                        '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+                        '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                    ];
+                @endphp
+                <select name="month" class="w-full text-xs rounded-xl border-coffee-200 bg-coffee-50/50 text-coffee-800 font-semibold focus:ring-coffee-500 focus:border-coffee-500 py-2">
+                    <option value="">Semua Bulan</option>
+                    @foreach($months as $mNum => $mName)
+                        <option value="{{ $mNum }}" {{ (string)$month === (string)$mNum ? 'selected' : '' }}>{{ $mName }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Tahun --}}
+            <div class="w-28">
+                <select name="year" class="w-full text-xs rounded-xl border-coffee-200 bg-coffee-50/50 text-coffee-800 font-semibold focus:ring-coffee-500 focus:border-coffee-500 py-2">
+                    <option value="">Semua Thn</option>
+                    @foreach($availableYears as $y)
+                        <option value="{{ $y }}" {{ (string)$year === (string)$y ? 'selected' : '' }}>{{ $y }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Filter Button --}}
+            <button type="submit" class="btn-press bg-coffee-700 hover:bg-coffee-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1">
+                🔍 Filter
+            </button>
+
+            {{-- Reset Button --}}
+            @if($day || $month || $year)
+                <a href="{{ route('owner.dashboard') }}" class="btn-press bg-coffee-100 hover:bg-coffee-200 text-coffee-700 text-xs font-bold px-3 py-2 rounded-xl transition border border-coffee-200">
+                    🔄 Reset
+                </a>
+            @endif
+
+            {{-- Cetak Laporan Button --}}
+            <button type="submit" formaction="{{ route('owner.dashboard.report') }}" formtarget="_blank" class="btn-press bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-xs flex items-center gap-1.5">
+                🖨️ Cetak Laporan
+            </button>
+        </form>
     </div>
 </div>
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     @php
+        $periodLabel = ($day || $month || $year) ? 'Periode Filter' : 'Hari Ini';
         $cards = [
             ['label' => 'Menunggu Verifikasi', 'value' => $stats['waiting_verification'], 'icon' => '⏳', 'color' => 'from-amber-400 to-amber-500'],
-            ['label' => 'Disetujui Hari Ini', 'value' => $stats['approved_today'], 'icon' => '✅', 'color' => 'from-emerald-400 to-emerald-500'],
+            ['label' => 'Disetujui (' . $periodLabel . ')', 'value' => $stats['approved_today'], 'icon' => '✅', 'color' => 'from-emerald-400 to-emerald-500'],
             ['label' => 'Sedang Diproses Dapur', 'value' => $stats['processing'], 'icon' => '🍳', 'color' => 'from-blue-400 to-blue-500'],
-            ['label' => 'Omzet Hari Ini', 'value' => 'Rp '.number_format($stats['revenue_today'], 0, ',', '.'), 'icon' => '💰', 'color' => 'from-coffee-500 to-coffee-700'],
+            ['label' => 'Omzet (' . $periodLabel . ')', 'value' => 'Rp '.number_format($stats['revenue_today'], 0, ',', '.'), 'icon' => '💰', 'color' => 'from-coffee-500 to-coffee-700'],
         ];
     @endphp
     @foreach($cards as $i => $card)
@@ -95,13 +160,4 @@
     </div>
 </div>
 
-<script>
-    setInterval(() => {
-        const d = new Date();
-        const h = String(d.getHours()).padStart(2, '0');
-        const m = String(d.getMinutes()).padStart(2, '0');
-        const el = document.getElementById('ownerClock');
-        if (el) el.textContent = `${h}:${m}`;
-    }, 5000);
-</script>
 @endsection

@@ -50,6 +50,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 */
 Route::prefix('owner')->name('owner.')->middleware(['auth', 'role:owner'])->group(function () {
     Route::get('/dashboard', [OwnerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/report', [OwnerDashboardController::class, 'printReport'])->name('dashboard.report');
 
     Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('menus', OwnerMenuController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -79,6 +80,7 @@ Route::prefix('owner')->name('owner.')->middleware(['auth', 'role:owner'])->grou
 */
 Route::prefix('dapur')->name('dapur.')->middleware(['auth', 'role:dapur'])->group(function () {
     Route::get('/dashboard', [DapurOrderController::class, 'index'])->name('dashboard');
+    Route::get('/waktu-pengerjaan', [DapurOrderController::class, 'history'])->name('history');
     Route::post('orders/{order}/process', [DapurOrderController::class, 'process'])->name('orders.process');
     Route::post('orders/{order}/complete', [DapurOrderController::class, 'complete'])->name('orders.complete');
 });

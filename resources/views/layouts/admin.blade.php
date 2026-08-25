@@ -75,8 +75,11 @@
                         </a>
                     @endforeach
                 @elseif($role === 'dapur')
-                    <a href="{{ route('dapur.dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-coffee-600 text-white font-semibold">
+                    <a href="{{ route('dapur.dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dapur.dashboard') ? 'bg-coffee-600 text-white font-semibold' : 'text-coffee-100 hover:bg-coffee-700' }}">
                         <span>🍳</span> Pesanan Masuk
+                    </a>
+                    <a href="{{ route('dapur.history') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dapur.history') ? 'bg-coffee-600 text-white font-semibold' : 'text-coffee-100 hover:bg-coffee-700' }}">
+                        <span>⏱️</span> Waktu Pengerjaan
                     </a>
                 @elseif($role === 'superadmin')
                     <a href="{{ route('superadmin.dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('superadmin.dashboard') ? 'bg-coffee-600 text-white font-semibold' : 'text-coffee-100 hover:bg-coffee-700' }}">
