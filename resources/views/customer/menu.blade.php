@@ -237,17 +237,6 @@
         </div>
     </div>
 
-    {{-- Hidden form untuk submit checkout --}}
-    <form id="checkoutForm" method="POST" action="{{ route('order.store') }}" class="hidden">
-        @csrf
-        <input type="hidden" name="customer_name" x-ref="fCustomerName">
-        <input type="hidden" name="customer_phone" x-ref="fCustomerPhone">
-        <input type="hidden" name="table_number" x-ref="fTableNumber">
-        <input type="hidden" name="note" x-ref="fNote">
-        <input type="hidden" name="cart" x-ref="fCart">
-    </form>
-
-    
 </div>
 
 <script>
@@ -351,35 +340,40 @@ function orderApp() {
 
         async submitCheckout() {
             this.submitting = true;
-            this.$refs.fCustomerName.value = this.customerName;
-            this.$refs.fCustomerPhone.value = this.customerPhone;
-            this.$refs.fTableNumber.value = this.tableNumber;
-            this.$refs.fNote.value = this.note;
-            this.$refs.fCart.value = JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty })));
-
-            const form = document.getElementById('checkoutForm');
-            const formData = new FormData(form);
-
             try {
-                const res = await fetch(form.action, {
+                const payload = {
+                    _token: '{{ csrf_token() }}',
+                    customer_name: this.customerName,
+                    customer_phone: this.customerPhone,
+                    table_number: this.tableNumber,
+                    note: this.note,
+                    cart: JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty })))
+                };
+
+                const res = await fetch('{{ route('order.store', [], false) }}', {
                     method: 'POST',
-                    body: formData,
                     headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify(payload)
                 });
 
                 if (res.ok) {
                     const data = await res.json();
                     if (data.redirect) {
-                        window.location.href = data.redirect;
+                        window.location.replace(data.redirect);
                         return;
                     }
                 }
-                form.submit();
+                const errData = await res.json();
+                alert(Object.values(errData.errors || {})[0]?.[0] || 'Gagal memproses pesanan.');
+                this.submitting = false;
             } catch (err) {
-                form.submit();
+                alert('Terjadi kesalahan jaringan. Silakan coba lagi.');
+                this.submitting = false;
             }
         },
     }

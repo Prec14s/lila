@@ -24,13 +24,13 @@ class OrderController extends Controller
             'customer_phone' => ['required', 'string', 'max:12', 'regex:/^[0-9]+$/'],
             'table_number' => ['required', 'string', 'max:50'],
             'note' => ['nullable', 'string', 'max:255'],
-            'cart' => ['required', 'string'],
+            'cart' => ['required'],
         ], [
             'customer_phone.max' => 'Nomor WhatsApp maksimal 12 digit.',
             'customer_phone.regex' => 'Nomor WhatsApp hanya boleh berupa angka.',
         ]);
 
-        $cart = json_decode($validated['cart'], true);
+        $cart = is_string($validated['cart']) ? json_decode($validated['cart'], true) : $validated['cart'];
 
         if (! is_array($cart) || count($cart) === 0) {
             return back()->withErrors(['cart' => 'Keranjang pesanan masih kosong.'])->withInput();

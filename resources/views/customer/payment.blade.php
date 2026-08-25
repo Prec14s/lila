@@ -8,17 +8,22 @@
     errorMessage: '',
     isCash() { return this.method === 'cash'; },
     setPreview(e) { const f = e.target.files[0]; if (f) this.preview = URL.createObjectURL(f); },
-    async submitPayment(e) {
-        e.preventDefault();
+    async submitPayment() {
         if (this.submitting) return;
         this.submitting = true;
         this.errorMessage = '';
 
-        const form = e.target;
-        const formData = new FormData(form);
+        const formData = new FormData();
+        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('payment_method', this.method);
+
+        const fileInput = document.querySelector('input[name="payment_proof"]');
+        if (fileInput && fileInput.files[0]) {
+            formData.append('payment_proof', fileInput.files[0]);
+        }
 
         try {
-            const res = await fetch(form.action, {
+            const res = await fetch('{{ route('order.upload-proof', $order->order_number, false) }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -30,7 +35,7 @@
             if (res.ok) {
                 const data = await res.json();
                 if (data.redirect) {
-                    window.location.href = data.redirect;
+                    window.location.replace(data.redirect);
                     return;
                 }
             } else if (res.status === 422) {
@@ -40,9 +45,11 @@
                 this.submitting = false;
                 return;
             }
-            form.submit();
+            this.errorMessage = 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.';
+            this.submitting = false;
         } catch (err) {
-            form.submit();
+            this.errorMessage = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+            this.submitting = false;
         }
     }
 }" class="max-w-2xl mx-auto px-4 py-8 sm:py-12">
@@ -79,9 +86,7 @@
         </div>
     @endif
 
-    <form action="{{ route('order.upload-proof', $order->order_number) }}" method="POST" enctype="multipart/form-data" @submit="submitPayment($event)" class="space-y-5">
-        @csrf
-
+    <div class="space-y-5">
         {{-- ============ PILIH CARA BAYAR: TUNAI / NON-TUNAI ============ --}}
         <div>
             <p class="text-sm font-semibold text-coffee-700 mb-2">Pilih Cara Bayar</p>
@@ -150,7 +155,8 @@
             </label>
         </div>
 
-        <button type="submit"
+        <button type="button"
+                @click="submitPayment()"
                 :disabled="submitting"
                 class="btn-press w-full text-white font-bold py-3.5 rounded-xl transition shadow-lg disabled:opacity-50"
                 :class="isCash() ? 'bg-orange-600 hover:bg-orange-700' : 'bg-coffee-800 hover:bg-coffee-900'">
@@ -158,6 +164,6 @@
             <span x-show="!submitting && isCash()">Konfirmasi Pesanan (Bayar di Kasir) 💵</span>
             <span x-show="submitting">Memproses... ⏳</span>
         </button>
-    </form>
+    </div>
 </div>
 @endsection
