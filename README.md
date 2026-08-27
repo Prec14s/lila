@@ -1,138 +1,100 @@
-# ☕ Sistem Warkop Samalila (Laravel 12 + MySQL)
+# ☕ Sistem Pemesanan & Pembayaran Digital — Warkop Samalila
 
-Sistem pemesanan & pembayaran digital berbasis QR Code untuk Warkop Samalila, dengan 4 role: **Super Admin**, **Owner**, **Dapur**, dan **User/Pelanggan** (tanpa login).
-
-Fitur pembayaran mendukung **Tunai (bayar di kasir)** dan **Non-Tunai (QRIS / Transfer Bank)**, lengkap dengan pembeda visual & alur verifikasi yang berbeda untuk masing-masing metode.
+Sistem pemesanan dan pembayaran digital berbasis QR Code untuk **Warkop Samalila**, dibangun menggunakan kerangka kerja **Laravel 12** dan **MySQL**. Sistem ini dirancang untuk mempercepat alur transaksi dari meja pelanggan, mempermudah verifikasi pembayaran oleh Owner, hingga pengelolaan antrean masak di Dapur secara realtime.
 
 ---
 
-## 🧩 Cara Instalasi
+## 🎯 Gambaran Umum Sistem
 
-Karena proyek ini dikembangkan secara offline (tanpa akses ke Packagist saat dibuat), ikuti langkah berikut agar dependency Laravel terpasang dengan benar:
+Sistem ini menghilangkan antrean manual di kasir dengan memungkinkan pelanggan memesan langsung dari meja masing-masing melalui scan QR Code. Menggunakan arsitektur multi-role dengan hak akses yang terisolasi secara aman:
 
-### 1. Buat skeleton Laravel 12 baru
-```bash
-composer create-project laravel/laravel warkop-samalila-app "12.*"
-cd warkop-samalila-app
-```
+1. **📱 Pelanggan (Customer / User / Scan QR)**:
+   - Tanpa perlu register/login.
+   - Mengakses menu digital melalui scan QR Code meja.
+   - Memilih menu, mengisi nomor meja & nama, serta memilih metode pembayaran (**Tunai** atau **Non-Tunai**).
+   - Melacak status pesanan secara *realtime*, menyalin nomor order, serta mengunduh Struk Digital (PDF) setelah pembayaran disetujui.
 
-### 2. Timpa (overwrite) folder berikut dengan isi paket ini
-Salin & timpa folder-folder berikut dari paket `warkop-samalila/` ke dalam project hasil `create-project` di atas:
-```
-app/            → timpa seluruhnya
-database/       → timpa seluruhnya
-resources/views → timpa seluruhnya
-routes/web.php  → timpa
-routes/console.php → timpa
-bootstrap/app.php → timpa
-bootstrap/providers.php → timpa
-```
-Jangan menimpa folder `vendor/`, `public/index.php`, `artisan`, atau `config/` bawaan `create-project` — biarkan tetap yang asli dari Laravel.
+2. **👑 Owner**:
+   - Manajerial penuh terhadap operasional warkop.
+   - Manajemen katalog menu (tambah, edit, hapus, upload foto, status stok/ketersediaan).
+   - Pengaturan kategori menu dan metode pembayaran (QRIS, Transfer Bank, Tunai di Kasir).
+   - Verifikasi Pembayaran (ACC/Tolak pesanan disertai alasan penolakan).
+   - Monitoring riwayat pesanan, laporan omzet harian/bulanan, cetak struk fisik/PDF, dan ekspor laporan.
 
-### 3. Konfigurasi environment
-```bash
-cp .env.example .env      # gunakan .env.example dari paket ini sebagai acuan, sesuaikan ke .env project
-php artisan key:generate
-```
-Edit `.env`, sesuaikan koneksi database:
-```
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=warkop_samalila
-DB_USERNAME=root
-DB_PASSWORD=
-```
+3. **🍳 Dapur (Kitchen Staff)**:
+   - Antarmuka khusus tim dapur dengan fitur *Auto-Update / Realtime Refresh*.
+   - Menampilkan urutan antrean pesanan yang sudah diverifikasi (ACC) oleh Owner.
+   - Fitur pencatatan durasi pengerjaan (*timer realtime* dari tombol "Mulai Proses" hingga "Tandai Selesai").
+   - Laporan riwayat durasi pengerjaan dan statistik memasak rata-rata/tercepat/terlama.
 
-### 4. Buat database & migrasi
-```bash
-mysql -u root -p -e "CREATE DATABASE warkop_samalila"
-php artisan migrate --seed
-```
-
-### 5. Buat symbolic link storage (untuk foto menu, QRIS, bukti bayar)
-```bash
-php artisan storage:link
-```
-
-### 6. Jalankan server
-```bash
-php artisan serve
-```
-Buka `http://localhost:8000`
-
-> **Catatan tampilan:** Sistem ini memakai **Tailwind CSS via CDN + Alpine.js via CDN**, jadi **tidak perlu** menjalankan `npm install` / `npm run build` — animasi dan styling langsung aktif begitu server dijalankan.
+4. **⚡ Super Admin**:
+   - Pengelola tingkat tinggi untuk manajemen akun pengguna (Owner & Dapur).
+   - Monitoring seluruh transaksi sistem secara umum.
+   - Fitur Audit Log / Log Aktivitas untuk mencatat tindakan krusial pengguna.
 
 ---
 
-## 🔑 Akun Default (hasil seeder)
+## 💡 Fitur Utama
 
-| Role | Email | Password | URL Login |
-|---|---|---|---|
-| Super Admin | superadmin@warkopsamalila.test | password | `/login/superadmin` |
-| Owner | owner@warkopsamalila.test | password | `/login/owner` |
-| Dapur | dapur@warkopsamalila.test | password | `/login/dapur` |
-
-**Segera ganti password default ini setelah instalasi**, terutama sebelum digunakan di lingkungan produksi.
-
-Halaman pelanggan (tanpa login, hasil scan barcode): `/pesan`
+- **Pemesanan QR Code Meja**: Pelanggan memilih menu dan meja secara langsung dari perangkat smartphone mereka.
+- **Dukungan Pembayaran Fleksibel**:
+  - **📲 Non-Tunai (QRIS & Transfer Bank)**: Pelanggan mengunggah foto bukti pembayaran untuk diverifikasi Owner.
+  - **💵 Tunai (Bayar di Kasir)**: Pelanggan mengonfirmasi pesanan tanpa unggah bukti, lalu bayar langsung saat mengambil pesanan.
+- **Tombol Salin No. Order**: Memudahkan pelanggan menyalin nomor transaksi untuk pelacakan status.
+- **Verifikasi Instant & Notifikasi WA**: Terhubung dengan tautan WhatsApp Owner untuk konfirmasi cepat pesanan.
+- **Struk Digital & Cetak PDF**: Generasi otomatis struk belanja berformat PDF dengan tampilan struk fisik thermal.
+- **Manajemen Antrean Dapur & Timer Realtime**: Dapur dapat memantau estimasi waktu masak tiap pesanan.
+- **Keamanan Multi-Guard**: Sistem otentikasi terpisah untuk masing-masing peran pengguna.
+- **Antarmuka Responsive**: Desain modern berbasis Tailwind CSS dan Alpine.js yang responsif di perangkat desktop maupun HP.
 
 ---
 
-## 💵 vs 📲 Pembeda Pembayaran Tunai & Non-Tunai
+## 💵 vs 📲 Skema Pembayaran
 
-| Aspek | 💵 Tunai | 📲 Non-Tunai (QRIS/Transfer) |
+| Fitur / Aspek | 💵 Pembayaran Tunai | 📲 Pembayaran Non-Tunai (QRIS / Transfer) |
 |---|---|---|
-| Dikonfigurasi di | Owner → Metode Pembayaran → tipe "Tunai" | Owner → Metode Pembayaran → tipe "QRIS"/"Transfer" |
-| Upload bukti bayar | **Tidak wajib** — pelanggan cukup konfirmasi | **Wajib** — pelanggan unggah foto bukti transfer/QRIS |
-| Badge di semua tampilan | 🟠 Oranye "Tunai" | 🟣 Indigo "Non-Tunai" |
-| Tombol verifikasi Owner | "💵 Tunai Diterima & ACC" | "✅ ACC Pembayaran" (menampilkan foto bukti) |
-| Teks WA ke Owner | "Metode: Bayar TUNAI di kasir..." | "Bukti pembayaran sudah saya unggah..." |
-| Struk cetak | Menampilkan label "💵 Tunai — Tunai di Kasir" | Menampilkan label "📲 Non-Tunai — QRIS/Transfer Bank" |
-
-Owner bisa mengaktifkan/menonaktifkan opsi Tunai kapan saja lewat menu **Metode Pembayaran**, tanpa mengubah kode.
+| **Verifikasi Bukti** | Tidak perlu unggah foto bukti transfer | Wajib unggah foto screenshot/bukti bayar |
+| **Pembeda Visual** | Badge Oranye "Tunai" | Badge Indigo "Non-Tunai" |
+| **Aksi Verifikasi Owner** | Tombol "💵 Tunai Diterima & ACC" | Tombol "✅ ACC Pembayaran" (disertai pratinjau foto) |
+| **Keterangan Struk** | `💵 Tunai — Bayar di Kasir` | `📲 Non-Tunai — QRIS / Transfer Bank` |
 
 ---
 
-## 🗂️ Struktur Alur Sistem
-
-1. Pelanggan scan barcode meja → `/pesan`
-2. Pilih menu (Makanan/Minuman/Snack) → isi nama & WA → checkout
-3. Pilih cara bayar: **Tunai** atau **Non-Tunai** (QRIS/Transfer)
-   - Non-Tunai → upload bukti bayar
-   - Tunai → langsung konfirmasi, bayar saat ambil pesanan
-4. Sistem generate Nomor Order (format `WS-YYYYMMDD-XXXX`) & buka link WhatsApp ke Owner
-5. Owner verifikasi (ACC/Tolak) di menu **Verifikasi Pembayaran**
-6. Setelah ACC → pesanan tampil di dashboard Dapur & bisa diteruskan via WA Dapur
-7. Dapur proses pesanan → tandai selesai
-8. Owner cetak struk & bisa cek status order kapan saja lewat Nomor Order
-
----
-
-## 📁 Struktur Folder Penting
+## 🗂️ Alur Kerja Sistem (Workflow)
 
 ```
-app/Http/Controllers/Customer/   → alur pelanggan (menu, checkout, bayar, status)
-app/Http/Controllers/Auth/       → login terpisah superadmin/owner/dapur
-app/Http/Controllers/Owner/      → CRUD menu, kategori, metode bayar, verifikasi, struk
-app/Http/Controllers/Dapur/      → daftar & update status pesanan dapur
-app/Http/Controllers/SuperAdmin/ → kelola akun owner/dapur
-app/Models/                      → User, Category, Menu, Order, OrderItem, PaymentSetting, BusinessSetting
-database/migrations/             → skema database lengkap
-database/seeders/                → akun default + data contoh
-resources/views/                 → semua tampilan Blade (Tailwind CDN + Alpine.js + animasi ringan)
-routes/web.php                   → seluruh routing sistem
+[Pelanggan Scan QR] ➔ [Pilih Menu & Isi Meja] ➔ [Pilih Cara Bayar (Tunai/Non-Tunai)]
+                                                         │
+                                                         ▼
+[Sistem Generate No. Order (WS-YYYYMMDD-XXXX)] ➔ [Kirim Konfirmasi via WhatsApp]
+                                                         │
+                                                         ▼
+                                          [Owner Verifikasi (ACC / Tolak)]
+                                                         │
+                                                         ▼
+                                        [Dapur Terima Order & Mulai Masak]
+                                                         │
+                                                         ▼
+                                       [Pesanan Selesai ➔ Struk PDF Aktif]
 ```
 
 ---
 
-## ⚙️ Kebutuhan Server
-- PHP >= 8.2
-- MySQL >= 5.7 / MariaDB >= 10.3
-- Ekstensi PHP: `pdo_mysql`, `mbstring`, `gd` atau `imagick` (untuk resize foto jika diperlukan ke depannya)
-- Composer 2.x
+## 🔑 Hak Akses Pengujian (Demo)
+
+| Role / Akses | Email | Akses URL |
+|---|---|---|
+| **Super Admin** | `superadmin@warkopsamalila.test` | `/login/superadmin` |
+| **Owner** | `owner@warkopsamalila.test` | `/login/owner` |
+| **Dapur** | `dapur@warkopsamalila.test` | `/login/dapur` |
+| **Pelanggan** | *(Tanpa Login)* | `/pesan` |
 
 ---
 
+## 📁 Arsitektur Kode & Modul
 
-
+- `app/Http/Controllers/Customer/`: Logika pemesanan, pembacaan menu, upload bukti, dan pelacakan status order pelanggan.
+- `app/Http/Controllers/Owner/`: Modul pengelolaan menu, kategori, verifikasi pembayaran, laporan omzet, dan cetak struk.
+- `app/Http/Controllers/Dapur/`: Manajemen antrean dapur realtime dan penghitungan durasi pengerjaan.
+- `app/Http/Controllers/SuperAdmin/`: Manajemen akun pengguna dan pemantauan aktivitas.
+- `resources/views/`: Komponen antarmuka Blade berbasis Tailwind CSS dan Alpine.js.
