@@ -16,6 +16,18 @@
         </div>
 
         <div class="bg-white rounded-3xl shadow-2xl p-6 animate-popin">
+            @if(session('error'))
+                <div class="mb-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs px-4 py-3 font-medium">
+                    ⚠️ {{ session('error') }}
+                </div>
+            @endif
+
+            @if(session('success'))
+                <div class="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-4 py-3 font-medium">
+                    ✅ {{ session('success') }}
+                </div>
+            @endif
+
             @if($errors->any())
                 <div class="mb-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3">
                     {{ $errors->first() }}

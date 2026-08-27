@@ -24,18 +24,21 @@
         <div class="flex justify-between items-center mb-3" x-data="{
             copied: false,
             copyText(text) {
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(text);
-                } else {
+                try {
                     const input = document.createElement('textarea');
                     input.value = text;
+                    input.style.position = 'fixed';
+                    input.style.left = '-9999px';
                     document.body.appendChild(input);
+                    input.focus();
                     input.select();
                     document.execCommand('copy');
                     document.body.removeChild(input);
+                    this.copied = true;
+                    setTimeout(() => this.copied = false, 2000);
+                } catch (e) {
+                    alert('Nomor Order: ' + text);
                 }
-                this.copied = true;
-                setTimeout(() => this.copied = false, 2000);
             }
         }">
             <span class="text-coffee-500 text-xs uppercase">No. Order</span>
@@ -101,12 +104,12 @@
 
     @if($order->payment_status === 'approved')
         <a href="{{ route('order.receipt', $order->order_number) }}" target="_blank"
-           class="btn-press mt-3 block w-full bg-coffee-800 hover:bg-coffee-900 text-white font-bold py-3.5 rounded-2xl shadow-md transition">
+           class="btn-press mt-3 block w-full bg-coffee-800 hover:bg-coffee-900 text-white font-bold py-3.5 rounded-2xl shadow-md transition text-center">
             🧾 Lihat & Download Struk (PDF)
         </a>
     @else
-        <div class="mt-3 rounded-2xl bg-coffee-100/70 border border-coffee-200/80 p-3 text-center text-coffee-700 text-xs font-semibold">
-            ⏳ Struk PDF akan dapat diunduh setelah pembayaran disetujui (ACC) oleh Owner.
+        <div class="mt-3 rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-center text-amber-900 text-xs font-bold shadow-xs">
+            ⏳ Struk PDF dapat diunduh secara mandiri setelah pembayaran disetujui (ACC) oleh Owner.
         </div>
     @endif
 

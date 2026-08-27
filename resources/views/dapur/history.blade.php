@@ -73,32 +73,31 @@
     </div>
 
     <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-coffee-50 text-coffee-500 text-xs uppercase font-bold">
+        <table class="w-full text-sm whitespace-nowrap">
+            <thead class="bg-coffee-50 text-coffee-500 text-xs uppercase font-bold whitespace-nowrap">
                 <tr>
-                    <th class="px-5 py-3.5 text-left">No. Order</th>
-                    <th class="px-5 py-3.5 text-left">Pelanggan</th>
-                    <th class="px-5 py-3.5 text-left">Menu yang Dimasak</th>
-                    <th class="px-5 py-3.5 text-left">Mulai Masak</th>
-                    <th class="px-5 py-3.5 text-left">Selesai</th>
-                    <th class="px-5 py-3.5 text-right">Durasi Pengerjaan</th>
+                    <th class="px-5 py-3.5 text-left whitespace-nowrap">No. Order</th>
+                    <th class="px-5 py-3.5 text-left whitespace-nowrap">Pelanggan</th>
+                    <th class="px-5 py-3.5 text-left whitespace-nowrap">Menu yang Dimasak</th>
+                    <th class="px-5 py-3.5 text-left whitespace-nowrap">Mulai Masak</th>
+                    <th class="px-5 py-3.5 text-left whitespace-nowrap">Selesai</th>
+                    <th class="px-5 py-3.5 text-right whitespace-nowrap">Durasi Pengerjaan</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-coffee-50">
+            <tbody class="divide-y divide-coffee-50 whitespace-nowrap">
                 @forelse($orders as $order)
                     <tr class="hover:bg-coffee-50/50 transition">
-                        <td class="px-5 py-3.5 font-bold text-coffee-800">{{ $order->order_number }}</td>
-                        <td class="px-5 py-3.5">
+                        <td class="px-5 py-3.5 font-bold text-coffee-800 whitespace-nowrap">{{ $order->order_number }}</td>
+                        <td class="px-5 py-3.5 whitespace-nowrap">
                             <span class="font-medium text-coffee-800">{{ $order->customer_name }}</span>
-                            <br>
-                            <span class="text-xs text-coffee-500 bg-coffee-100 px-1.5 py-0.5 rounded font-bold">🪑 Meja {{ $order->table_number ?? '-' }}</span>
+                            <span class="text-xs text-coffee-500 bg-coffee-100 px-1.5 py-0.5 rounded font-bold whitespace-nowrap inline-block ml-1">🪑 Meja {{ $order->table_number ?? '-' }}</span>
                         </td>
-                        <td class="px-5 py-3.5 text-xs text-coffee-700">
-                            <ul class="list-disc list-inside space-y-0.5">
+                        <td class="px-5 py-3.5 text-xs text-coffee-700 whitespace-nowrap">
+                            <div class="space-y-0.5 whitespace-nowrap">
                                 @foreach($order->items as $item)
-                                    <li><strong class="text-coffee-800">{{ $item->menu_name }}</strong> (x{{ $item->qty }})</li>
+                                    <div><strong class="text-coffee-800">{{ $item->menu_name }}</strong> (x{{ $item->qty }})</div>
                                 @endforeach
-                            </ul>
+                            </div>
                         </td>
                         <td class="px-5 py-3.5 text-xs text-coffee-600 whitespace-nowrap">
                             {{ $order->kitchen_processing_started_at ? $order->kitchen_processing_started_at->format('H:i:s') : '-' }} WIB
@@ -107,14 +106,14 @@
                             {{ $order->kitchen_completed_at ? $order->kitchen_completed_at->format('H:i:s') : '-' }} WIB
                         </td>
                         <td class="px-5 py-3.5 text-right whitespace-nowrap">
-                            <span class="inline-block px-3 py-1 rounded-xl text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span class="inline-block px-3 py-1 rounded-xl text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 whitespace-nowrap">
                                 ⏱️ {{ $order->kitchenDurationFormatted() }}
                             </span>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-5 py-12 text-center text-coffee-400">
+                        <td colspan="6" class="px-5 py-12 text-center text-coffee-400 whitespace-nowrap">
                             Belum ada riwayat pesanan selesai dengan catatan waktu pengerjaan.
                         </td>
                     </tr>

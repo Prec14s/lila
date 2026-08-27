@@ -21,6 +21,12 @@ class MenuController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->has('price')) {
+            $request->merge([
+                'price' => (int) preg_replace('/[^0-9]/', '', (string) $request->input('price')),
+            ]);
+        }
+
         $validated = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:100'],
@@ -40,6 +46,12 @@ class MenuController extends Controller
 
     public function update(Request $request, Menu $menu): RedirectResponse
     {
+        if ($request->has('price')) {
+            $request->merge([
+                'price' => (int) preg_replace('/[^0-9]/', '', (string) $request->input('price')),
+            ]);
+        }
+
         $validated = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:100'],

@@ -25,27 +25,29 @@
     <div class="px-5 py-4 border-b border-coffee-100">
         <h2 class="font-bold text-coffee-800">Transaksi Terbaru</h2>
     </div>
-    <table class="w-full text-sm">
-        <thead class="bg-coffee-50 text-coffee-500 text-xs uppercase">
-            <tr>
-                <th class="px-5 py-3 text-left">No. Order</th>
-                <th class="px-5 py-3 text-left">Cara Bayar</th>
-                <th class="px-5 py-3 text-left">Status</th>
-                <th class="px-5 py-3 text-right">Total</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-coffee-50">
-            @forelse($recentOrders as $order)
-                <tr class="hover:bg-coffee-50/60 transition">
-                    <td class="px-5 py-3 font-semibold text-coffee-800">{{ $order->order_number }}</td>
-                    <td class="px-5 py-3"><span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $order->paymentCategoryColor() }}">{{ $order->paymentCategoryIcon() }} {{ $order->paymentCategoryLabel() }}</span></td>
-                    <td class="px-5 py-3"><span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ $order->paymentStatusColor() }}">{{ $order->paymentStatusLabel() }}</span></td>
-                    <td class="px-5 py-3 text-right font-semibold text-coffee-800">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm whitespace-nowrap">
+            <thead class="bg-coffee-50 text-coffee-500 text-xs uppercase font-bold whitespace-nowrap">
+                <tr>
+                    <th class="px-5 py-3 text-left whitespace-nowrap">No. Order</th>
+                    <th class="px-5 py-3 text-left whitespace-nowrap">Cara Bayar</th>
+                    <th class="px-5 py-3 text-left whitespace-nowrap">Status</th>
+                    <th class="px-5 py-3 text-right whitespace-nowrap">Total</th>
                 </tr>
-            @empty
-                <tr><td colspan="4" class="px-5 py-10 text-center text-coffee-400">Belum ada transaksi.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="divide-y divide-coffee-50 whitespace-nowrap">
+                @forelse($recentOrders as $order)
+                    <tr class="hover:bg-coffee-50/60 transition">
+                        <td class="px-5 py-3 font-semibold text-coffee-800 whitespace-nowrap">{{ $order->order_number }}</td>
+                        <td class="px-5 py-3 whitespace-nowrap"><span class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap inline-block {{ $order->paymentCategoryColor() }}">{{ $order->paymentCategoryIcon() }} {{ $order->paymentCategoryLabel() }}</span></td>
+                        <td class="px-5 py-3 whitespace-nowrap"><span class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap inline-block {{ $order->paymentStatusColor() }}">{{ $order->paymentStatusLabel() }}</span></td>
+                        <td class="px-5 py-3 text-right font-semibold text-coffee-800 whitespace-nowrap">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="4" class="px-5 py-10 text-center text-coffee-400 whitespace-nowrap">Belum ada transaksi.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 @endsection

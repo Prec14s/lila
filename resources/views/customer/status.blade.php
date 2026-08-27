@@ -32,18 +32,21 @@
             <div class="flex justify-between items-center mb-3" x-data="{
                 copied: false,
                 copyText(text) {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(text);
-                    } else {
+                    try {
                         const input = document.createElement('textarea');
                         input.value = text;
+                        input.style.position = 'fixed';
+                        input.style.left = '-9999px';
                         document.body.appendChild(input);
+                        input.focus();
                         input.select();
                         document.execCommand('copy');
                         document.body.removeChild(input);
+                        this.copied = true;
+                        setTimeout(() => this.copied = false, 2000);
+                    } catch (e) {
+                        alert('Nomor Order: ' + text);
                     }
-                    this.copied = true;
-                    setTimeout(() => this.copied = false, 2000);
                 }
             }">
                 <span class="text-coffee-500 text-xs uppercase">No. Order</span>
@@ -59,13 +62,13 @@
             </div>
 
             <div class="flex gap-2 mb-4 flex-wrap">
-                <span class="text-xs font-semibold px-3 py-1 rounded-full {{ $order->paymentStatusColor() }}">
+                <span class="text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap {{ $order->paymentStatusColor() }}">
                     💳 {{ $order->paymentStatusLabel() }}
                 </span>
-                <span class="text-xs font-semibold px-3 py-1 rounded-full {{ $order->orderStatusColor() }}">
+                <span class="text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap {{ $order->orderStatusColor() }}">
                     🍽️ {{ $order->orderStatusLabel() }}
                 </span>
-                <span class="text-xs font-semibold px-3 py-1 rounded-full {{ $order->paymentCategoryColor() }}">
+                <span class="text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap {{ $order->paymentCategoryColor() }}">
                     {{ $order->paymentCategoryIcon() }} {{ $order->paymentCategoryLabel() }}
                 </span>
             </div>
@@ -93,7 +96,7 @@
                 </div>
             @endif
 
-            @if($order->payment_status === 'approved')
+            @if($order->payment_status === 'approved' || auth()->check())
                 <div class="mt-4 pt-3 border-t border-coffee-100 flex justify-end">
                     <a href="{{ route('order.receipt', $order->order_number) }}" target="_blank"
                        class="btn-press text-xs font-semibold px-4 py-2.5 rounded-xl bg-coffee-800 hover:bg-coffee-900 text-white shadow transition">
@@ -101,8 +104,10 @@
                     </a>
                 </div>
             @else
-                <div class="mt-4 pt-3 border-t border-coffee-100 text-center">
-                    <span class="text-[11px] text-coffee-500 font-medium italic">⏳ Struk PDF dapat diunduh setelah pembayaran disetujui (ACC) Owner.</span>
+                <div class="mt-4 pt-3 border-t border-coffee-100">
+                    <div class="rounded-xl bg-amber-50 border border-amber-200/90 p-3 text-center text-amber-900 text-xs font-semibold shadow-xs">
+                        ⏳ Struk PDF dapat diunduh setelah pembayaran disetujui (ACC) oleh Owner.
+                    </div>
                 </div>
             @endif
         </div>

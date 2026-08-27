@@ -339,32 +339,35 @@ function orderApp() {
         },
 
         async submitCheckout() {
+            if (this.submitting) return;
             this.submitting = true;
+
             try {
-                const payload = {
-                    _token: '{{ csrf_token() }}',
-                    customer_name: this.customerName,
-                    customer_phone: this.customerPhone,
-                    table_number: this.tableNumber,
-                    note: this.note,
-                    cart: JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty })))
-                };
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('customer_name', this.customerName);
+                formData.append('customer_phone', this.customerPhone);
+                formData.append('table_number', this.tableNumber);
+                formData.append('note', this.note || '');
+                formData.append('cart', JSON.stringify(this.cart.map(i => ({ id: i.id, qty: i.qty }))));
 
                 const res = await fetch('{{ route('order.store') }}', {
                     method: 'POST',
+                    body: formData,
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
+                    }
                 });
 
-                const contentType = res.headers.get('content-type') || '';
-                const data = contentType.includes('application/json') ? await res.json() : null;
+                if (res.redirected && res.url) {
+                    window.location.href = res.url;
+                    return;
+                }
 
-                if (res.ok && data && data.redirect) {
+                const data = await res.json().catch(() => null);
+
+                if (data && data.redirect) {
                     window.location.href = data.redirect;
                     return;
                 }
@@ -373,12 +376,12 @@ function orderApp() {
                     const firstErr = Object.values(data.errors)[0];
                     alert(Array.isArray(firstErr) ? firstErr[0] : firstErr);
                 } else {
-                    alert('Gagal membuat pesanan (Status ' + res.status + '). Silakan coba lagi.');
+                    alert('Gagal membuat pesanan (Status HTTP ' + res.status + '). Silakan periksa kembali data Anda.');
                 }
                 this.submitting = false;
             } catch (err) {
                 console.error('Checkout error:', err);
-                alert('Terjadi kesalahan koneksi. Silakan coba lagi.');
+                alert('Gagal mengirim pesanan: ' + (err.message || 'Kesalahan koneksi'));
                 this.submitting = false;
             }
         },

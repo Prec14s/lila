@@ -134,7 +134,5 @@ routes/web.php                   → seluruh routing sistem
 
 ---
 
-## 🚀 Pengembangan Lanjutan (opsional)
-- Integrasi WhatsApp Business API resmi (saat ini pakai tautan `wa.me` klik-kirim)
-- Integrasi payment gateway otomatis untuk verifikasi QRIS real-time
-- Laporan omzet harian/bulanan (tunai vs non-tunai) dalam bentuk grafik
+
+

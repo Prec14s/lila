@@ -26,9 +26,26 @@
                     <label class="text-xs font-semibold text-coffee-600">Nama Menu</label>
                     <input name="name" type="text" required class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-2.5 text-sm">
                 </div>
-                <div>
-                    <label class="text-xs font-semibold text-coffee-600">Harga (Rp)</label>
-                    <input name="price" type="number" min="0" required class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-2.5 text-sm">
+                <div x-data="{
+                    displayPrice: '',
+                    rawPrice: '',
+                    formatRupiah(val) {
+                        let num = val.replace(/[^0-9]/g, '');
+                        this.rawPrice = num;
+                        this.displayPrice = num ? new Intl.NumberFormat('id-ID').format(num) : '';
+                    }
+                }">
+                    <label class="text-xs font-semibold text-coffee-600">Harga Menu</label>
+                    <div class="relative mt-1">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-coffee-700 select-none">Rp</span>
+                        <input type="text"
+                               x-model="displayPrice"
+                               @input="formatRupiah($event.target.value)"
+                               placeholder="15.000"
+                               required
+                               class="w-full border border-coffee-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold text-coffee-800 focus:ring-2 focus:ring-coffee-400 focus:outline-none">
+                        <input type="hidden" name="price" :value="rawPrice">
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-coffee-600">Deskripsi (opsional)</label>
@@ -99,9 +116,26 @@
                                         <label class="text-xs font-semibold text-coffee-600">Nama Menu</label>
                                         <input name="name" type="text" required value="{{ $menu->name }}" class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-2.5 text-sm">
                                     </div>
-                                    <div>
-                                        <label class="text-xs font-semibold text-coffee-600">Harga (Rp)</label>
-                                        <input name="price" type="number" min="0" required value="{{ $menu->price }}" class="mt-1 w-full border border-coffee-200 rounded-xl px-4 py-2.5 text-sm">
+                                    <div x-data="{
+                                        displayPrice: '{{ number_format($menu->price, 0, ',', '.') }}',
+                                        rawPrice: '{{ (int)$menu->price }}',
+                                        formatRupiah(val) {
+                                            let num = val.replace(/[^0-9]/g, '');
+                                            this.rawPrice = num;
+                                            this.displayPrice = num ? new Intl.NumberFormat('id-ID').format(num) : '';
+                                        }
+                                    }">
+                                        <label class="text-xs font-semibold text-coffee-600">Harga Menu</label>
+                                        <div class="relative mt-1">
+                                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-coffee-700 select-none">Rp</span>
+                                            <input type="text"
+                                                   x-model="displayPrice"
+                                                   @input="formatRupiah($event.target.value)"
+                                                   placeholder="15.000"
+                                                   required
+                                                   class="w-full border border-coffee-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-semibold text-coffee-800 focus:ring-2 focus:ring-coffee-400 focus:outline-none">
+                                            <input type="hidden" name="price" :value="rawPrice">
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="text-xs font-semibold text-coffee-600">Deskripsi</label>

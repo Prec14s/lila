@@ -45,7 +45,7 @@ class LoginController extends Controller
         if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return back()
-                ->withErrors(['email' => "Terlalu banyak percobaan login gagal. Silakan coba lagi dalam {$seconds} detik."])
+                ->withErrors(['email' => "Password salah 3 kali. Akses login terkunci! Silakan coba lagi dalam {$seconds} detik."])
                 ->onlyInput('email');
         }
 
@@ -61,7 +61,7 @@ class LoginController extends Controller
                 $errorMsg = "Email atau kata sandi salah. Sisa percobaan: {$remaining} kali.";
             } else {
                 $seconds = RateLimiter::availableIn($throttleKey);
-                $errorMsg = "Terlalu banyak percobaan login gagal. Silakan coba lagi dalam {$seconds} detik.";
+                $errorMsg = "Password salah 3 kali. Akses login terkunci! Silakan coba lagi dalam {$seconds} detik.";
             }
 
             return back()->withErrors(['email' => $errorMsg])->onlyInput('email');
@@ -81,7 +81,9 @@ class LoginController extends Controller
         $role = $user->role;
         $targetRoute = $this->homeRoutes[$role] ?? 'home';
 
-        return redirect()->intended(route($targetRoute));
+        $request->session()->forget('url.intended');
+
+        return redirect()->route($targetRoute)->with('success', 'Selamat datang kembali, ' . $user->name . '!');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -95,6 +97,6 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('login')->with('success', 'Anda telah keluar dari sistem.');
     }
 }

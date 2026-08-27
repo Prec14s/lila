@@ -8,6 +8,7 @@ use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentSetting;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:100'],
@@ -90,7 +91,10 @@ class OrderController extends Controller
         });
 
         if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(['redirect' => route('order.pay', $order->order_number)]);
+            return response()->json([
+                'success' => true,
+                'redirect' => route('order.pay', $order->order_number)
+            ], 200);
         }
 
         return redirect()->route('order.pay', $order->order_number);
@@ -109,7 +113,7 @@ class OrderController extends Controller
         return view('customer.payment', compact('order', 'paymentSettings'));
     }
 
-    public function uploadProof(Request $request, string $orderNumber): RedirectResponse
+    public function uploadProof(Request $request, string $orderNumber): RedirectResponse|JsonResponse
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
@@ -166,7 +170,10 @@ class OrderController extends Controller
         );
 
         if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(['redirect' => route('order.success', $order->order_number)]);
+            return response()->json([
+                'success' => true,
+                'redirect' => route('order.success', $order->order_number)
+            ], 200);
         }
 
         return redirect()->route('order.success', $order->order_number);
@@ -208,7 +215,7 @@ class OrderController extends Controller
 
         if ($order->payment_status !== 'approved' && ! auth()->check()) {
             return redirect()->route('order.status', ['order_number' => $order->order_number])
-                ->with('error', 'Struk hanya dapat diunduh setelah pembayaran disetujui (ACC) oleh Owner.');
+                ->with('error', 'Struk PDF dapat diunduh setelah pembayaran disetujui (ACC) oleh Owner.');
         }
 
         $business = BusinessSetting::instance();
